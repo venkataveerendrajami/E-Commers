@@ -1,6 +1,12 @@
 const path = require('path');
 const fs = require('fs');
 
+// Default Supabase connection for production deployment
+const defaultSupabaseUrl = 'postgresql://postgres.plgjoszttkvitpqagxik:Jami%401811200@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres';
+if (!process.env.DATABASE_URL && !process.env.SUPABASE_DB_URL && (process.env.NODE_ENV === 'production' || process.env.RENDER)) {
+  process.env.DATABASE_URL = defaultSupabaseUrl;
+}
+
 // Check if PostgreSQL (Supabase) is configured
 const isSupabase = Boolean(
   (process.env.DATABASE_URL && (process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://'))) ||

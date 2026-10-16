@@ -14,18 +14,18 @@ services:
       - key: PORT
         value: 10000
       - key: CLIENT_URL
-        sync: false
+        value: "*"
       - key: JWT_SECRET
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        value: "postgresql://postgres.plgjoszttkvitpqagxik:Jami%401811200@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres"
       - key: ADMIN_PASSWORD
-        sync: false
+        value: "Admin@12345"
       - key: RAZORPAY_KEY_ID
-        sync: false
+        value: "rzp_test_mock"
       - key: RAZORPAY_KEY_SECRET
-        sync: false
+        value: "mock_secret"
       - key: BREVO_API_KEY
         sync: false
       - key: BREVO_SENDER_EMAIL
-        sync: false
+        value: "jamilovaprasad2005@gmail.com"
