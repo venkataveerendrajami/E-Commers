@@ -189,6 +189,7 @@ exports.adminLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
     let user = await db.get('SELECT * FROM users WHERE LOWER(email) = ?', [cleanEmail]);
 
     // Fallback: If default administrator account was not seeded, auto-provision on first valid login
