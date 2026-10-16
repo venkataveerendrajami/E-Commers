@@ -16,8 +16,27 @@ if (isSupabase) {
   // ====================================================================
   // SUPABASE (POSTGRESQL) CLOUD DATABASE CLIENT
   // ====================================================================
-  const { Pool } = require('pg');
-  const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+  let connectionString = (process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || '').trim();
+
+  // If password contains unescaped special characters like '@' (e.g. postgres://user:pass@word@host:port/db)
+  if (connectionString) {
+    const atMatches = connectionString.match(/@/g);
+    if (atMatches && atMatches.length > 1) {
+      const lastAtIndex = connectionString.lastIndexOf('@');
+      const protocolIndex = connectionString.indexOf('://');
+      if (protocolIndex !== -1 && lastAtIndex > protocolIndex + 3) {
+        const userInfo = connectionString.substring(protocolIndex + 3, lastAtIndex);
+        const rest = connectionString.substring(lastAtIndex);
+        const colonIndex = userInfo.indexOf(':');
+        if (colonIndex !== -1) {
+          const user = userInfo.substring(0, colonIndex);
+          const rawPass = userInfo.substring(colonIndex + 1);
+          const encodedPass = encodeURIComponent(decodeURIComponent(rawPass));
+          connectionString = `${connectionString.substring(0, protocolIndex + 3)}${user}:${encodedPass}${rest}`;
+        }
+      }
+    }
+  }
 
   console.log('[Database] Connecting to Supabase (PostgreSQL) Cloud Database...');
 
