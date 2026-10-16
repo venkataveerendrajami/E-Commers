@@ -12,10 +12,8 @@
 - **🔐 Phone & Email OTP + Voice Call Authentication**: Secure passwordless customer login and instant auto-registration via SMS OTP, Email OTP, or automated Voice Call ("Call me with code" verification with browser speech synthesis preview).
 - **⚡ Dynamic Unlimited Variants & Sizes**: Easily configure products with multiple sizes (e.g., 6", 8", 10", 12", 200ml, 500ml) with independent pricing, SKU, and stock.
 - **💳 Razorpay Payment Gateway**: Seamless checkout with server-side HMAC-SHA256 signature verification and test-mode simulation for local development.
-- **📦 Complete Order Fulfillment & 🇮🇳 India Post Tracking**: Sequential order IDs (`VE100001`+), Indian delivery address fields, stock deduction, 7-stage live tracking timeline, and official **India Post Consignment Tracking** allocation (`indiapost.gov.in`) with 1-click customer copying and direct tracking link.
-- **🏷️ Admin-Only Product Publishing & Instant Price Controls**: Only the authenticated administrator has rights to publish products or increase/decrease product prices with dynamic inline adjustment controls (`+10`, `-10`, `+50`). Strict backend validation ensures customer frontends cannot manipulate prices.
+- **📦 Complete Order Fulfillment**: Sequential order IDs (`VE100001`+), Indian delivery address fields, stock deduction, and 7-stage live tracking timeline.
 - **📊 Real-time Sales Analytics**: Daily, weekly, and monthly revenue trends, order volume graphs (Recharts), and top-selling product metrics.
-- **🗄️ Dual-Mode Database Engine**: Supports both high-speed local embedded SQLite (`node:sqlite`) and **Supabase (PostgreSQL)** cloud database with zero code changes.
 - **📱 Responsive Mobile-First Design**: Optimized for mobile, tablet, laptop, and desktop browsers with custom forest & earthy aesthetics.
 
 ---

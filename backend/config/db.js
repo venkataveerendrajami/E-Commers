@@ -95,16 +95,59 @@ if (isSupabase) {
         console.log('🌿 [Database] Connected successfully to Supabase (PostgreSQL)!');
       }
 
-      // Ensure delivery tracking columns exist on orders table
-      await pool.query(`
-        ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_id VARCHAR(100) DEFAULT NULL;
-        ALTER TABLE orders ADD COLUMN IF NOT EXISTS courier_name VARCHAR(100) DEFAULT 'India Post';
-        ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url VARCHAR(500) DEFAULT NULL;
-        ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ DEFAULT NULL;
+      // Check if users table exists, if not run supabase_schema.sql
+      const usersTableCheck = await pool.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'users'
+        ) as exists;
       `);
+      if (!usersTableCheck.rows[0]?.exists) {
+        console.log('[Database] Tables not found. Initializing PostgreSQL schema...');
+        const possiblePgPaths = [
+          path.resolve(__dirname, '../database/supabase_schema.sql'),
+          path.resolve(__dirname, '../../database/supabase_schema.sql'),
+          path.resolve(process.cwd(), 'database/supabase_schema.sql'),
+          path.resolve(process.cwd(), 'supabase_schema.sql')
+        ];
+        for (const p of possiblePgPaths) {
+          if (fs.existsSync(p)) {
+            const sql = fs.readFileSync(p, 'utf8');
+            await pool.query(sql);
+            console.log('[Database] Initialized PostgreSQL schema from:', p);
+            break;
+          }
+        }
+      }
+
+      // Ensure delivery tracking columns exist on orders table
+      try {
+        await pool.query(`
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_id VARCHAR(100) DEFAULT NULL;
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS courier_name VARCHAR(100) DEFAULT 'India Post';
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url VARCHAR(500) DEFAULT NULL;
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ DEFAULT NULL;
+        `);
+      } catch (err) {
+        console.warn('[Orders Migration Warning]', err.message);
+      }
+
+      // Ensure default administrator exists
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@vellanki.com').trim().toLowerCase();
+      const adminCheck = await pool.query('SELECT * FROM users WHERE LOWER(email) = $1', [adminEmail]);
+      if (adminCheck.rows.length === 0) {
+        const bcrypt = require('bcryptjs');
+        const adminPass = process.env.ADMIN_PASSWORD || 'Admin@12345';
+        const hash = bcrypt.hashSync(adminPass, 10);
+        await pool.query(`
+          INSERT INTO users (name, email, phone, password_hash, role, phone_verified, email_verified, status)
+          VALUES ($1, $2, $3, $4, $5, 1, 1, 'active')
+          ON CONFLICT (email) DO NOTHING
+        `, ['Vellanki Admin', adminEmail, '+919876543210', hash, 'admin']);
+        console.log('[Database] Seeded default administrator account in PostgreSQL:', adminEmail);
+      }
     } catch (err) {
-      console.error('❌ [Database] Failed to connect to Supabase:', err.message);
-      console.error('   Please verify DATABASE_URL in .env matches your Supabase connection string.');
+      console.error('❌ [Database] Failed to connect/initialize Supabase:', err.message);
     }
   };
 
@@ -175,10 +218,24 @@ if (isSupabase) {
 
   initDatabase = function() {
     console.log('[Database] Initializing local SQLite tables...');
-    const schemaPath = path.resolve(__dirname, '../../database/schema.sql');
-    if (fs.existsSync(schemaPath)) {
-      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-      sqlite.exec(schemaSql);
+    const possibleSchemaPaths = [
+      path.resolve(__dirname, '../database/schema.sql'),
+      path.resolve(__dirname, '../../database/schema.sql'),
+      path.resolve(__dirname, './schema.sql'),
+      path.resolve(process.cwd(), 'database/schema.sql'),
+      path.resolve(process.cwd(), 'schema.sql')
+    ];
+    for (const p of possibleSchemaPaths) {
+      if (fs.existsSync(p)) {
+        try {
+          const schemaSql = fs.readFileSync(p, 'utf8');
+          sqlite.exec(schemaSql);
+          console.log('[Database] Loaded SQLite schema from:', p);
+          break;
+        } catch (err) {
+          console.warn('[Database] Schema load error:', err.message);
+        }
+      }
     }
 
     // Ensure delivery tracking columns exist on orders table
@@ -199,6 +256,23 @@ if (isSupabase) {
       }
     } catch (e) {
       console.warn('[Migration Warning]', e.message);
+    }
+
+    // Ensure default administrator account exists
+    try {
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@vellanki.com').trim().toLowerCase();
+      const existing = sqlite.prepare("SELECT * FROM users WHERE LOWER(email) = ?").get(adminEmail);
+      if (!existing) {
+        const adminPass = process.env.ADMIN_PASSWORD || 'Admin@12345';
+        const hash = bcrypt.hashSync(adminPass, 10);
+        sqlite.prepare(`
+          INSERT INTO users (name, email, phone, password_hash, role, phone_verified, email_verified, status)
+          VALUES (?, ?, ?, ?, ?, 1, 1, 'active')
+        `).run('Vellanki Admin', adminEmail, '+919876543210', hash, 'admin');
+        console.log('[Database] Seeded default administrator:', adminEmail);
+      }
+    } catch (err) {
+      console.warn('[Admin Seed Warning]', err.message);
     }
   };
 }

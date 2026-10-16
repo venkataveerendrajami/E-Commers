@@ -209,3 +209,8 @@ CREATE INDEX IF NOT EXISTS idx_product_images_product ON product_images(product_
 CREATE INDEX IF NOT EXISTS idx_otp_identifier ON otp_verifications(identifier);
 CREATE INDEX IF NOT EXISTS idx_wishlists_user ON wishlists(user_id);
 
+-- DEFAULT ADMINISTRATOR SEED
+INSERT OR IGNORE INTO users (id, name, email, phone, password_hash, role, phone_verified, email_verified, status)
+VALUES (1, 'Vellanki Admin', 'admin@vellanki.com', '+919876543210', '$2a$10$VDK4ZM22Zp.HTqppT6i30uhbQ1lI5KFjY6BgISVr/ChLfx/SctDhm', 'admin', 1, 1, 'active');
+
+

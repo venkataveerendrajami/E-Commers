@@ -189,8 +189,24 @@ exports.adminLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const user = await db.get('SELECT * FROM users WHERE LOWER(email) = ?', [cleanEmail]);
+    let user = await db.get('SELECT * FROM users WHERE LOWER(email) = ?', [cleanEmail]);
+
+    // Fallback: If default administrator account was not seeded, auto-provision on first valid login
+    const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'admin@vellanki.com').trim().toLowerCase();
+    const defaultAdminPassword = process.env.ADMIN_PASSWORD || 'Admin@12345';
+    if (!user && cleanEmail === defaultAdminEmail) {
+      if (password === defaultAdminPassword) {
+        const hashedPassword = bcrypt.hashSync(defaultAdminPassword, 10);
+        await db.run(
+          `INSERT INTO users (name, email, phone, password_hash, role, phone_verified, email_verified, status)
+           VALUES (?, ?, ?, ?, ?, 1, 1, 'active')`,
+          ['Vellanki Admin', defaultAdminEmail, '+919876543210', hashedPassword, 'admin']
+        );
+        user = await db.get('SELECT * FROM users WHERE LOWER(email) = ?', [defaultAdminEmail]);
+      } else {
+        return res.status(401).json({ success: false, message: 'Invalid password.' });
+      }
+    }
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'Administrator account not found.' });
