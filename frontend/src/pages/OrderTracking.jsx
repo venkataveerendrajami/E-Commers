@@ -15,7 +15,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { ordersAPI } from '../services/api';
+import { ordersAPI, getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const STATUS_ICONS = {
@@ -324,7 +324,15 @@ const OrderTracking = () => {
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-12 h-12 bg-gray-50 rounded-xl overflow-hidden shrink-0">
                   {item.product_image ? (
-                    <img src={item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
+                    <img
+                      src={getImageUrl(item.product_image)}
+                      alt={item.product_name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                      }}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-forest/40">
                       <ShoppingBag className="w-6 h-6" />

@@ -8,6 +8,7 @@ import {
   Upload, 
   Check, 
   Image as ImageIcon,
+  Link as LinkIcon,
   Layers,
   AlertCircle,
   Eye,
@@ -18,7 +19,7 @@ import {
   TrendingDown,
   DollarSign
 } from 'lucide-react';
-import { productsAPI, categoriesAPI } from '../../services/api';
+import { productsAPI, categoriesAPI, getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../../services/api';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -51,8 +52,10 @@ const AdminProducts = () => {
     material: '',
     weight: '',
     featured: false,
-    status: 'active'
+    status: 'active',
+    imageUrl: ''
   });
+  const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'file'
 
   // Dynamic Unlimited Variants state
   const [variants, setVariants] = useState([]);
@@ -161,8 +164,10 @@ const AdminProducts = () => {
       material: '100% Biodegradable Eco Paper',
       weight: 'Standard',
       featured: false,
-      status: 'active'
+      status: 'active',
+      imageUrl: ''
     });
+    setImageInputMode('url');
     setVariants([]);
     setSelectedFiles([]);
     setPreviewUrls([]);
@@ -173,6 +178,7 @@ const AdminProducts = () => {
 
   const openEditModal = (product) => {
     setEditingProduct(product);
+    const existingImg = product.image || '';
     setFormData({
       name: product.name,
       category_id: product.category_id || '',
@@ -184,8 +190,10 @@ const AdminProducts = () => {
       material: product.material || '',
       weight: product.weight || '',
       featured: !!product.featured,
-      status: product.status || 'active'
+      status: product.status || 'active',
+      imageUrl: existingImg
     });
+    setImageInputMode(existingImg.startsWith('http') ? 'url' : 'file');
 
     setVariants(
       product.variants && product.variants.length > 0
@@ -273,6 +281,11 @@ const AdminProducts = () => {
       selectedFiles.forEach((file) => {
         data.append('images', file);
       });
+
+      // Append direct image URL if provided
+      if (formData.imageUrl && formData.imageUrl.trim()) {
+        data.append('image', formData.imageUrl.trim());
+      }
 
       if (editingProduct) {
         await productsAPI.updateProduct(editingProduct.id, data);
@@ -415,9 +428,17 @@ const AdminProducts = () => {
                   return (
                     <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-3 px-4">
-                        <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center border border-gray-200">
                           {p.image ? (
-                            <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                            <img
+                              src={getImageUrl(p.image)}
+                              alt={p.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                              }}
+                            />
                           ) : (
                             <ImageIcon className="w-5 h-5 text-gray-400" />
                           )}
@@ -841,44 +862,112 @@ const AdminProducts = () => {
 
               {/* IMAGE UPLOADS */}
               <div className="space-y-3">
-                <label className="block text-xs font-semibold text-gray-700">Product Images</label>
-                
-                {/* Existing uploaded images */}
-                {existingImages.length > 0 && (
-                  <div className="flex flex-wrap gap-3 pb-2">
-                    {existingImages.map((img) => (
-                      <div key={img.id} className="relative w-16 h-16 rounded-xl border overflow-hidden group">
-                        <img src={img.image_url} alt="Uploaded" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteImage(img.id)}
-                          className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-gray-700">Product Images</label>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setImageInputMode('url')}
+                      className={`py-1 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1 border transition-all ${
+                        imageInputMode === 'url' ? 'bg-forest text-white border-forest shadow-xs' : 'bg-gray-50 text-gray-600 border-gray-200'
+                      }`}
+                    >
+                      <LinkIcon className="w-3 h-3" />
+                      <span>Direct Image URL</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageInputMode('file')}
+                      className={`py-1 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1 border transition-all ${
+                        imageInputMode === 'file' ? 'bg-forest text-white border-forest shadow-xs' : 'bg-gray-50 text-gray-600 border-gray-200'
+                      }`}
+                    >
+                      <Upload className="w-3 h-3" />
+                      <span>Upload Files</span>
+                    </button>
+                  </div>
+                </div>
+
+                {imageInputMode === 'url' ? (
+                  <div className="space-y-2">
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/... or direct image link"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-forest"
+                    />
+                    <p className="text-[10px] text-gray-400">
+                      Paste high-resolution photo URLs (e.g. from Unsplash, Google Images, or your CDN). Direct URLs load fast and never disappear!
+                    </p>
+                    {formData.imageUrl && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <img
+                          src={getImageUrl(formData.imageUrl)}
+                          alt="URL preview"
+                          className="w-14 h-14 object-cover rounded-xl border border-gray-200 shadow-xs"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                          }}
+                        />
+                        <span className="text-[11px] text-gray-500 font-medium">Live Image URL Preview</span>
                       </div>
-                    ))}
+                    )}
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-1.5" />
+                    <p className="text-xs font-semibold text-gray-700">Select images from your device</p>
+                    <p className="text-[10px] text-gray-400">JPEG, PNG, WEBP (Max 5MB each)</p>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="mt-2 text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-forest"
+                    />
                   </div>
                 )}
 
-                <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-1.5" />
-                  <p className="text-xs font-semibold text-gray-700">Select images from your device</p>
-                  <p className="text-[10px] text-gray-400">JPEG, PNG, WEBP (Max 5MB each)</p>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="mt-2 text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-forest"
-                  />
-                </div>
+                {/* Existing uploaded images */}
+                {existingImages.length > 0 && (
+                  <div>
+                    <span className="text-[11px] font-semibold text-gray-600 block mb-1.5">Existing Gallery Images:</span>
+                    <div className="flex flex-wrap gap-2.5 pb-2">
+                      {existingImages.map((img) => (
+                        <div key={img.id} className="relative w-14 h-14 rounded-xl border overflow-hidden group shadow-xs">
+                          <img
+                            src={getImageUrl(img.image_url)}
+                            alt="Uploaded"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteImage(img.id)}
+                            className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete this photo"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {previewUrls.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {previewUrls.map((url, i) => (
-                      <img key={i} src={url} alt="Preview" className="w-14 h-14 object-cover rounded-lg border" />
-                    ))}
+                  <div>
+                    <span className="text-[11px] font-semibold text-gray-600 block mb-1.5">New Uploads Preview:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {previewUrls.map((url, i) => (
+                        <img key={i} src={url} alt="Preview" className="w-14 h-14 object-cover rounded-lg border" />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

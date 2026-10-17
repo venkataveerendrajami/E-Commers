@@ -4,6 +4,14 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/uploads/:path*",
+      "destination": "https://vellanki-enterprises-backend-w0dq.onrender.com/uploads/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://vellanki-enterprises-backend-w0dq.onrender.com/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

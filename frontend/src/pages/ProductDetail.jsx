@@ -12,7 +12,7 @@ import {
   PackageCheck,
   AlertCircle
 } from 'lucide-react';
-import { productsAPI } from '../services/api';
+import { productsAPI, getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -187,9 +187,13 @@ const ProductDetail = () => {
           <div className="aspect-square bg-white rounded-3xl border border-gray-100 p-4 shadow-sm overflow-hidden flex items-center justify-center relative">
             {selectedImage ? (
               <img
-                src={selectedImage}
+                src={getImageUrl(selectedImage)}
                 alt={product.name}
                 className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                }}
               />
             ) : (
               <div className="text-center text-gray-400">
@@ -218,7 +222,15 @@ const ProductDetail = () => {
                     selectedImage === img.image_url ? 'border-forest ring-2 ring-forest/20' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <img src={img.image_url} alt="Thumbnail" className="w-full h-full object-cover rounded-lg" />
+                  <img
+                    src={getImageUrl(img.image_url)}
+                    alt="Thumbnail"
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                    }}
+                  />
                 </button>
               ))}
             </div>

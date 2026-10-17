@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   TrendingUp
 } from 'lucide-react';
-import { productsAPI, categoriesAPI, settingsAPI } from '../services/api';
+import { productsAPI, categoriesAPI, settingsAPI, getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../services/api';
 import ProductCard from '../components/customer/ProductCard';
 import EmptyState from '../components/common/EmptyState';
 
@@ -191,7 +191,15 @@ const Home = () => {
               >
                 <div className="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center text-forest mb-4 group-hover:scale-110 transition-transform overflow-hidden">
                   {cat.image ? (
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                    <img
+                      src={getImageUrl(cat.image)}
+                      alt={cat.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                      }}
+                    />
                   ) : (
                     <Leaf className="w-8 h-8 text-emerald-600" />
                   )}

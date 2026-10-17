@@ -337,6 +337,11 @@ exports.createProduct = async (req, res) => {
           [productId, imgUrl, index === 0 ? 1 : 0]
         );
       }
+    } else if (primaryImage) {
+      await db.run(
+        'INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)',
+        [productId, primaryImage]
+      );
     }
 
     // Process dynamic variants if provided
@@ -436,6 +441,15 @@ exports.updateProduct = async (req, res) => {
         await db.run(
           'INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, ?)',
           [id, imgUrl, (!existing.image && index === 0) ? 1 : 0]
+        );
+      }
+    } else if (req.body.image !== undefined && req.body.image.trim() !== '') {
+      primaryImage = req.body.image.trim();
+      const existingImgRow = await db.get('SELECT id FROM product_images WHERE product_id = ? AND image_url = ?', [id, primaryImage]);
+      if (!existingImgRow) {
+        await db.run(
+          'INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)',
+          [id, primaryImage]
         );
       }
     }

@@ -12,6 +12,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/common/EmptyState';
+import { getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../services/api';
 
 const Cart = () => {
   const { items, summary, loading, updateQuantity, removeItem, clearCart } = useCart();
@@ -136,7 +137,15 @@ const Cart = () => {
               {/* Product Thumbnail */}
               <Link to={`/products/${item.productSlug || item.productId}`} className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden shrink-0">
                 {item.productImage ? (
-                  <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />
+                  <img
+                    src={getImageUrl(item.productImage)}
+                    alt={item.productName}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                    }}
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-forest/40">
                     <ShoppingBag className="w-8 h-8" />

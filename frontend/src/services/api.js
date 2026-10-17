@@ -119,4 +119,20 @@ export const settingsAPI = {
   submitContact: (data) => api.post('/contact/submit', data),
 };
 
+export const getImageUrl = (path) => {
+  if (!path) return '';
+  if (typeof path !== 'string') return '';
+  const trimmed = path.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:') || trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://vellanki-enterprises-backend-w0dq.onrender.com/api';
+  const backendBase = apiUrl.replace(/\/api\/?$/, '');
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${backendBase}${cleanPath}`;
+};
+
+export const DEFAULT_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80';
+
 export default api;

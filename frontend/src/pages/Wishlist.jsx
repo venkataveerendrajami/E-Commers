@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingBag, Trash2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
-import { wishlistAPI } from '../services/api';
+import { wishlistAPI, getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/common/EmptyState';
@@ -111,9 +111,13 @@ const Wishlist = () => {
                 <div>
                   <div className="relative aspect-square bg-gray-50 overflow-hidden group">
                     <img
-                      src={product.image || '/placeholder-product.png'}
+                      src={getImageUrl(product.image)}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                      }}
                     />
                     <button
                       type="button"

@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { ordersAPI, addressAPI, authAPI, wishlistAPI } from '../services/api';
+import { ordersAPI, addressAPI, authAPI, wishlistAPI, getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../services/api';
 import AddressModal from '../components/customer/AddressModal';
 import EmptyState from '../components/common/EmptyState';
 
@@ -576,9 +576,13 @@ const Account = () => {
                   <div>
                     <div className="relative aspect-square bg-gray-50 rounded-2xl overflow-hidden mb-3 group">
                       <img
-                        src={item.image || '/placeholder-product.png'}
+                        src={getImageUrl(item.image)}
                         alt={item.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                        }}
                       />
                       <button
                         onClick={() => handleRemoveWishlist(item.id)}

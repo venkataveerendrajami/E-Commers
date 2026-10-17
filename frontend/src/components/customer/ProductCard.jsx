@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Eye, Layers } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { getImageUrl, DEFAULT_PRODUCT_IMAGE } from '../../services/api';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -31,7 +32,8 @@ const ProductCard = ({ product }) => {
   }
 
   // Primary image
-  const displayImage = product.image || (product.images && product.images.length > 0 ? product.images[0].image_url : null);
+  const rawImage = product.image || (product.images && product.images.length > 0 ? product.images[0].image_url : null);
+  const displayImage = rawImage ? getImageUrl(rawImage) : null;
 
   const handleQuickAdd = async (e) => {
     e.preventDefault();
@@ -60,6 +62,10 @@ const ProductCard = ({ product }) => {
             alt={product.name}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+            }}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-emerald-50/50 text-forest/40 p-4 text-center">
