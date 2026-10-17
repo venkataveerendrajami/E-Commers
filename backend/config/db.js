@@ -4,19 +4,12 @@ const { Pool } = require('pg');
 
 // Default Supabase connection for production deployment
 const defaultSupabaseUrl = 'postgresql://postgres.plgjoszttkvitpqagxik:Jami%401811200@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres';
-if (!process.env.DATABASE_URL || process.env.DATABASE_URL.trim() === '') {
-  if (process.env.DB_TYPE !== 'sqlite') {
-    process.env.DATABASE_URL = defaultSupabaseUrl;
-  }
+if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.startsWith('postgres') || process.env.DATABASE_URL.includes('plgjoszttkvitpqagxik')) {
+  process.env.DATABASE_URL = defaultSupabaseUrl;
 }
 
 // Check if PostgreSQL (Supabase) is configured
-const isSupabase = Boolean(
-  (process.env.DATABASE_URL && (process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://'))) ||
-  (process.env.SUPABASE_DB_URL && (process.env.SUPABASE_DB_URL.startsWith('postgres://') || process.env.SUPABASE_DB_URL.startsWith('postgresql://'))) ||
-  process.env.DB_TYPE === 'supabase' ||
-  process.env.DB_TYPE === 'postgres'
-);
+const isSupabase = process.env.DB_TYPE === 'sqlite' ? false : true;
 
 let db;
 let initDatabase;
