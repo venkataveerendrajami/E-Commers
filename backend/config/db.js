@@ -2,14 +2,17 @@ const path = require('path');
 const fs = require('fs');
 const { Pool } = require('pg');
 
-// Default Supabase connection for production deployment
+// Default Supabase connection for permanent cloud storage
 const defaultSupabaseUrl = 'postgresql://postgres.plgjoszttkvitpqagxik:Jami%401811200@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres';
-if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.startsWith('postgres') || process.env.DATABASE_URL.includes('plgjoszttkvitpqagxik')) {
+
+// Override empty, invalid, or obsolete internal Render database URLs
+const currentDbUrl = (process.env.DATABASE_URL || '').trim();
+if (!currentDbUrl || !currentDbUrl.startsWith('postgres') || currentDbUrl.includes('dpg-') || currentDbUrl.includes('render.com')) {
   process.env.DATABASE_URL = defaultSupabaseUrl;
 }
 
-// Check if PostgreSQL (Supabase) is configured
-const isSupabase = process.env.DB_TYPE === 'sqlite' ? false : true;
+// In cloud/production, ALWAYS connect to Supabase (PostgreSQL) - never use ephemeral SQLite which loses data on tab close!
+const isSupabase = true;
 
 let db;
 let initDatabase;
@@ -49,7 +52,9 @@ if (isSupabase) {
     },
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000
+    connectionTimeoutMillis: 30000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000
   });
 
   // Convert SQLite "?" placeholders to PostgreSQL "$1, $2, $3..."

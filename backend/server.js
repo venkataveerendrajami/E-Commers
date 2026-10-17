@@ -43,6 +43,7 @@ app.get('/api/health', async (req, res) => {
       success: true,
       status: 'online',
       message: 'VELLANKI ENTERPRISES API is operational',
+      version: '2.5.0-supabase-permanent',
       databaseType: db.isPostgres ? 'supabase (postgresql)' : 'sqlite',
       productsCount: productCount,
       categoriesCount: categoryCount,
@@ -51,6 +52,16 @@ app.get('/api/health', async (req, res) => {
   } catch (err) {
     return res.status(500).json({ success: false, status: 'error', message: err.message });
   }
+});
+
+// Deployment Version Check
+app.get('/api/version', (req, res) => {
+  res.json({
+    success: true,
+    version: '2.5.0-supabase-permanent',
+    databaseType: db.isPostgres ? 'supabase (postgresql)' : 'sqlite',
+    deployedAt: '2026-10-17'
+  });
 });
 
 // API Routes
