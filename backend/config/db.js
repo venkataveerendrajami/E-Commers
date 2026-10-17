@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { Pool } = require('pg');
 
 // Default Supabase connection for production deployment
 const defaultSupabaseUrl = 'postgresql://postgres.plgjoszttkvitpqagxik:Jami%401811200@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres';
